@@ -1,0 +1,6 @@
+---
+# vars file for postgresql
+postgres_user: xpaste
+postgres_password: xpaste
+postgres_db: xpaste_db
+postgresql_data_dir: "/var/lib/pgsql/data"

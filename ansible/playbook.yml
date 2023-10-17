@@ -1,0 +1,20 @@
+- name: Slurm Ansible Practice
+  hosts: localhost
+  gather_facts: true
+  become: true
+  roles:
+    - prepare_python
+    - prepare_sources
+    - postgresql
+    - geerlingguy.nginx
+    - configure_nginx
+    - role: geerlingguy.ruby
+      ruby_install_from_source: true
+      ruby_install_bundler: true
+      ruby_version: 2.6.0
+      ruby_download_url: http://cache.ruby-lang.org/pub/ruby/2.6/ruby-2.6.0.tar.gz
+      ruby_install_gems_user: root
+      ruby_install_gems:
+        - name: bundler
+          version: '1.16.2'
+    - deploy_app

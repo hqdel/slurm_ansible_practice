@@ -1,0 +1,63 @@
+---
+# tasks file for deploy_app
+- name: Install dependencies
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - gcc 
+    - gcc-c++ 
+    - kernel-devel 
+    - make
+    - libxml2-devel
+    - rubygems
+    - nodejs
+    - libxslt-devel
+    - file-devel
+    - shared-mime-info
+    - libtool
+    - libyaml
+  vars:
+    ansible_python_interpreter: /usr/bin/python2 
+    
+- name: Delete old ruby 2.0
+  become: true
+  yum:
+    name: ruby
+    state: absent
+    
+- name: Create symlink to new ruby
+  become: yes
+  file:
+    src: /usr/local/bin/ruby
+    dest: /usr/bin/ruby
+    state: link
+    force: yes           
+    
+- name: Set bundle config for Nokogiri
+  become: true
+  become_user: xpaste
+  command: /usr/local/bin/bundle config build.nokogiri --use-system-libraries
+  args:
+    chdir: /etc/xpaste/
+
+- name: Install bundle dependencies
+  become: true
+  command: /usr/local/bin/bundle install --clean --force --no-cache --without development
+  args:
+    chdir: /etc/xpaste/
+  
+- name: Deploy service configuration file
+  copy:
+    src: xpaste.service
+    dest: /etc/systemd/system/xpaste.service
+    owner: xpaste
+    group: root
+    mode: '0644'
+    
+- name: Start XPaste App
+  systemd:
+    name: xpaste
+    state: started
+    enabled: yes

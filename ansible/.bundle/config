@@ -1,0 +1,4 @@
+---
+BUNDLE_CLEAN: "true"
+BUNDLE_BUILD__NOKOGIRI: "--use-system-libraries"
+BUNDLE_WITHOUT: "development"

@@ -1,0 +1,95 @@
+---
+# tasks file for postgresql
+- name: Install Postgres
+  become: true
+  yum:
+    name: "{{ item }}"
+    state: present
+    update_cache: true
+  loop:
+    - postgresql-server
+    - postgresql-devel
+    - python-devel 
+
+- name: Check if PostgreSQL database is initialized.
+  become: true
+  stat:
+    path: "{{ postgresql_data_dir }}/PG_VERSION"
+  register: pgdata_dir_version
+  
+- name: Initialize Postgres database
+  command: postgresql-setup initdb
+  become: true
+  when: not pgdata_dir_version.stat.exists
+
+- name: Start and enable Postgres service
+  become: true
+  service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: Configure Postgres for change password postgres
+  become: true
+  template:
+    src: pg_hba_start.conf.j2
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0640'
+
+- name: Restart Postgres
+  systemd:
+    name: postgresql.service
+    state: restarted
+    enabled: yes
+  
+- name: Change PostgreSQL user password
+  postgresql_user:
+    db: postgres
+    name: postgres
+    password: postgres
+    login_user: postgres
+    encrypted: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  
+- name: Configure Postgres
+  become: true
+  template:
+    src: pg_hba.conf.j2
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    owner: postgres
+    group: postgres
+    mode: '0640'
+
+- name: Restart Postgres
+  systemd:
+    name: postgresql.service
+    state: restarted
+    enabled: yes
+    
+- name: Create Postgres user
+  postgresql_user:
+    db: postgres
+    name: "{{ postgres_user }}"
+    password: "{{ postgres_password }}"
+    login_user: postgres
+    login_password: postgres
+    login_host: localhost
+    login_unix_socket: /var/run/postgresql
+    priv: "ALL"
+    encrypted: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+
+- name: Create Postgres database
+  postgresql_db:
+    name: "{{ postgres_db }}"
+    owner: "{{ postgres_user }}"
+    login_user: postgres
+    login_password: postgres
+    login_host: localhost
+    login_unix_socket: /var/run/postgresql
+  vars:
+    ansible_python_interpreter: /usr/bin/python3   

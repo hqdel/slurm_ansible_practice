@@ -1,0 +1,32 @@
+---
+# tasks file for prepare_sources
+- name: Install unzip
+  become: true
+  yum:
+    name: unzip
+    state: present
+  vars:
+    ansible_python_interpreter: /usr/bin/python2
+
+- name: Extract zip archive with sources of xpaste
+  become: true
+  unarchive:
+    src: xpaste.zip
+    dest: /etc/
+    remote_src: false
+    extra_opts: ['-q']
+
+- name: Add the user xpaste
+  ansible.builtin.user:
+    name: xpaste
+    comment: xpaste
+    uid: 1040
+    group: root  
+
+- name: Change ownership of a directory /etc/xpaste
+  ansible.builtin.file:
+    path: /etc/xpaste
+    state: directory
+    recurse: yes
+    owner: xpaste
+    group: root

@@ -1,0 +1,42 @@
+---
+# tasks file for install_nginx
+- name: "Modify html folder permissions"
+  file:
+    path: /usr/share/nginx/html
+    state: directory
+    owner: nginx
+    group: nginx
+
+- name: "Delete old folder"
+  file:
+    state: absent
+    path: /usr/share/nginx/html
+
+- name: "Copy dist folder"
+  become: true
+  copy:
+    src: /etc/xpaste/public
+    dest: /usr/share/nginx/
+    owner: nginx
+    group: nginx
+    mode: 0644
+    remote_src: true
+
+- name: "Delete default config"
+  file:
+    state: absent
+    path: /etc/nginx/conf.d/default.conf
+    
+- name: Add nginx config for xpaste
+  copy:
+    src: xpaste.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: '0644'
+     
+- name: Reload Nginx
+  become: true
+  service:
+    name: nginx
+    state: reloaded
